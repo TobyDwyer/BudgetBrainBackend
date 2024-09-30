@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 2323;
 
 // Connect to MongoDB
 mongoose
-  .connect(process.env.MONGODB_URI)
+  .connect("mongodb+srv://BudgetBrainAdmin:BudgetBrainAdmin@budgetbrain.tpaxw.mongodb.net/?retryWrites=true&w=majority&appName=BudgetBrain")
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log(err));
 
