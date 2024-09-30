@@ -8,7 +8,7 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   languagePreference: { type: String, default: "en" },
   savingsGoal: { type: Number, default: 0 },
-  ssoKey: { type: String, required: false, unique: true },
+  ssoKey: { type: String, required: false },
 });
 
 UserSchema.index({ email: 1 });
