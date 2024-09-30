@@ -1,7 +1,8 @@
-const express = require("express");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+import express from "express"
+import bcrypt from "bcryptjs"
+import jwt from "jsonwebtoken"
+import User from "../models/User.mjs"
+
 
 const router = express.Router();
 
@@ -32,7 +33,14 @@ router.post("/register", async (req, res) => {
 
   try {
     await user.save();
-    res.status(201).send("User registered successfully.");
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    res.status(201).json({ 
+      token: token,
+    })
   } catch (err) {
     res.status(400).send("Error registering user: " + err.message);
   }
@@ -41,8 +49,11 @@ router.post("/register", async (req, res) => {
 // Login User
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-
-  const user = await User.findOne({ email });
+  try{
+    const user = await User.findOne({ email });
+  }catch{
+    return res.status(401).send("Invalid credentials.");
+  }
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
     return res.status(401).send("Invalid credentials.");
@@ -51,7 +62,15 @@ router.post("/login", async (req, res) => {
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
     expiresIn: "1h",
   });
-  res.json({ token });
+  res.json({ 
+    token: token,
+   });
 });
 
-module.exports = router;
+router.post("/user", async (req, res) => {
+  res.json({ 
+    user: req.user,
+   });
+});
+
+export default router;

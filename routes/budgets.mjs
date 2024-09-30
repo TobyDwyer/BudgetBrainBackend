@@ -1,6 +1,6 @@
-const express = require("express");
-const Budget = require("../models/Budget");
-const { authenticateToken } = require("../middleware/auth");
+import express from "express"
+import Budget from "../models/Budget.mjs"
+import { authenticateToken } from "../middleware/auth.mjs"
 
 const router = express.Router();
 
@@ -32,4 +32,4 @@ router.delete("/:id", authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
