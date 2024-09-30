@@ -8,22 +8,22 @@ const router = express.Router();
 // Get Budgets
 router.get("/", authenticateToken, async (req, res) => {
   const budgets = await Budget.find({ userId: req.user.id });
-  res.json(budgets);
+  res.json({budgets:budgets});
 });
 
 // Budget Details
 router.get("/:id", authenticateToken, async (req, res) => {
   try {
-    const budget = await Budget.findOne(req.params.id);
+    const budget = await Budget.findOne({_id: req.params.id});
 
     await budget.categories.forEach(async x=>{
       const txns = await Transaction.find({budgetId: budget._id, category: x.category});
-      x.usedAmount = txns.reduce((accumulator, currentValue) => {
+      x.amountSpent = txns.reduce((accumulator, currentValue) => {
         return accumulator + currentValue;
       }, 0);
     }) 
 
-    res.status(200).json(budget);
+    res.status(200).json({budget:budget});
   } catch (err) {
     res.status(400).send("Error Getting budget: " + err.message);
   }
@@ -31,11 +31,11 @@ router.get("/:id", authenticateToken, async (req, res) => {
 
 // Create Budget
 router.post("/", authenticateToken, async (req, res) => {
-  const budget = new Budget({ userId: req.user.id, ...req.body });
+  const budget = new Budget({ userId: req.user.id, ...req.body, remainingAmount: 0 });
 
   try {
     await budget.save();
-    res.status(201).json(budget);
+    res.status(201).json({budget:budget});
   } catch (err) {
     res.status(400).send("Error creating budget: " + err.message);
   }
