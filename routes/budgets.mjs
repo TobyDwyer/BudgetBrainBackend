@@ -1,6 +1,7 @@
 import express from "express"
 import Budget from "../models/Budget.mjs"
 import { authenticateToken } from "../middleware/auth.mjs"
+import Transaction from "../models/Transaction.mjs";
 
 const router = express.Router();
 
@@ -10,11 +11,26 @@ router.get("/", authenticateToken, async (req, res) => {
   res.json(budgets);
 });
 
+// Budget Details
+router.get("/:id", authenticateToken, async (req, res) => {
+  try {
+    const budget = await Budget.findOne(req.params.id);
+
+    await budget.categories.forEach(async x=>{
+      const txns = await Transaction.find({budgetId: budget._id, category: x.category});
+      x.usedAmount = txns.reduce((accumulator, currentValue) => {
+        return accumulator + currentValue;
+      }, 0);
+    }) 
+
+    res.status(200).json(budget);
+  } catch (err) {
+    res.status(400).send("Error Getting budget: " + err.message);
+  }
+});
+
 // Create Budget
 router.post("/", authenticateToken, async (req, res) => {
-
-  
-
   const budget = new Budget({ userId: req.user.id, ...req.body });
 
   try {
