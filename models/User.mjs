@@ -8,6 +8,9 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   languagePreference: { type: String, default: "en" },
   savingsGoal: { type: Number, default: 0 },
+  ssoKey: { type: String, required: false, unique: true },
 });
+
+UserSchema.index({ email: 1 });
 
 export default mongoose.model("User", UserSchema);

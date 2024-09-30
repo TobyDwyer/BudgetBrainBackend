@@ -2,6 +2,7 @@ import express from "express"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import User from "../models/User.mjs"
+import { authenticateToken } from "../middleware/auth.mjs";
 
 
 const router = express.Router();
@@ -49,28 +50,43 @@ router.post("/register", async (req, res) => {
 // Login User
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  try{
+  try {
     const user = await User.findOne({ email });
-  }catch{
-    return res.status(401).send("Invalid credentials.");
-  }
 
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    return res.status(401).send("Invalid credentials.");
-  }
+    if (!user) {
+      return res.status(401).send("User not found.");
+    }
 
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: "1h",
-  });
-  res.json({ 
-    token: token,
-   });
+    if (!(await bcrypt.compare(password, user.password))) {
+      return res.status(401).send("Invalid credentials.");
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    res.json({ token });
+  } catch (err) {
+    console.error("Error during login:", err); // Log the error
+    res.status(500).send("Internal server error.");
+  }
 });
 
-router.post("/user", async (req, res) => {
-  res.json({ 
-    user: req.user,
+router.post("/user", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ "_id": req.user.id });
+
+    if (!user) {
+      return res.status(401).send("User not found.");
+    }
+    user.password = undefined
+    res.json({ 
+      user: user,
    });
+  } catch (err) {
+    console.error("Error during login:", err); // Log the error
+    res.status(500).send("Internal server error.");
+  }
+  
 });
 
 export default router;
