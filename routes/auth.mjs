@@ -66,7 +66,7 @@ router.post("/login", async (req, res) => {
     });
     res.json({ token });
   } catch (err) {
-    console.error("Error during login:", err); // Log the error
+    console.error("Error during login:", err);
     res.status(500).send("Internal server error.");
   }
 });
@@ -83,7 +83,7 @@ router.post("/user", authenticateToken, async (req, res) => {
       user: user,
    });
   } catch (err) {
-    console.error("Error during login:", err); // Log the error
+    console.error("Error during login:", err);
     res.status(500).send("Internal server error.");
   }
   

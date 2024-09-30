@@ -4,8 +4,17 @@ import { authenticateToken } from "../middleware/auth.mjs"
 
 const router = express.Router();
 
+// Get Budgets
+router.get("/", authenticateToken, async (req, res) => {
+  const budgets = await Budget.find({ userId: req.user.id });
+  res.json(budgets);
+});
+
 // Create Budget
 router.post("/", authenticateToken, async (req, res) => {
+
+  
+
   const budget = new Budget({ userId: req.user.id, ...req.body });
 
   try {
@@ -14,12 +23,6 @@ router.post("/", authenticateToken, async (req, res) => {
   } catch (err) {
     res.status(400).send("Error creating budget: " + err.message);
   }
-});
-
-// Get Budgets
-router.get("/", authenticateToken, async (req, res) => {
-  const budgets = await Budget.find({ userId: req.user.id });
-  res.json(budgets);
 });
 
 // Delete Budget
