@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import User from "../models/User.mjs"
 import { authenticateToken } from "../middleware/auth.mjs";
+import Transaction from "../models/Transaction.mjs";
 
 
 const router = express.Router();
@@ -81,6 +82,32 @@ router.post("/user", authenticateToken, async (req, res) => {
     user.password = undefined
     res.json({ 
       user: user,
+   });
+  } catch (err) {
+    console.error("Error during login:", err);
+    res.status(500).send("Internal server error.");
+  }
+  
+});
+
+router.post("/dashboard", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ "_id": req.user.id });
+
+    if (!user) {
+      return res.status(401).send("User not found.");
+    }
+
+    const txns = await Transaction.find({ "userId": req.user.id, "category": "Savings"});
+
+    const saved = txns.reduce((sum, val) => {
+        return sum + val.amount;
+      }, 0);
+    
+    const pres = Math.round(Math.min(saved / user.savingsGoal, 1) * 100)
+    
+    res.json({ 
+      presentageSaved: pres,
    });
   } catch (err) {
     console.error("Error during login:", err);

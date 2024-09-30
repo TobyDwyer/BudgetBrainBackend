@@ -19,7 +19,7 @@ router.post("/", authenticateToken, async (req, res) => {
 // Get Transactions
 router.get("/", authenticateToken, async (req, res) => {
   const transactions = await Transaction.find({ userId: req.user.id });
-  res.json(transactions);
+  res.json({transactions:transactions});
 });
 
 // Delete Transaction
