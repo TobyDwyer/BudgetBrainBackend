@@ -1,10 +1,9 @@
-import express from "express"
-import bcrypt from "bcryptjs"
-import jwt from "jsonwebtoken"
-import User from "../models/User.mjs"
+import express from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import User from "../models/User.mjs";
 import { authenticateToken } from "../middleware/auth.mjs";
 import Transaction from "../models/Transaction.mjs";
-
 
 const router = express.Router();
 
@@ -40,9 +39,9 @@ router.post("/register", async (req, res) => {
       expiresIn: "1h",
     });
 
-    res.status(201).json({ 
+    res.status(201).json({
       token: token,
-    })
+    });
   } catch (err) {
     res.status(400).send("Error registering user: " + err.message);
   }
@@ -74,46 +73,47 @@ router.post("/login", async (req, res) => {
 
 router.post("/user", authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ "_id": req.user.id });
+    const user = await User.findOne({ _id: req.user.id });
 
     if (!user) {
       return res.status(401).send("User not found.");
     }
-    user.password = undefined
-    res.json({ 
+    user.password = undefined;
+    res.json({
       user: user,
-   });
+    });
   } catch (err) {
     console.error("Error during login:", err);
     res.status(500).send("Internal server error.");
   }
-  
 });
 
 router.post("/dashboard", authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ "_id": req.user.id });
+    const user = await User.findOne({ _id: req.user.id });
 
     if (!user) {
       return res.status(401).send("User not found.");
     }
 
-    const txns = await Transaction.find({ "userId": req.user.id, "category": "Savings"});
+    const txns = await Transaction.find({
+      userId: req.user.id,
+      category: "Savings",
+    });
 
     const saved = txns.reduce((sum, val) => {
-        return sum + val.amount;
-      }, 0);
-    
-    const pres = Math.round(Math.min(saved / user.savingsGoal, 1) * 100)
-    
-    res.json({ 
+      return sum + val.amount;
+    }, 0);
+
+    const pres = Math.round(Math.min(saved / user.savingsGoal, 1) * 100);
+
+    res.json({
       presentageSaved: pres,
-   });
+    });
   } catch (err) {
     console.error("Error during login:", err);
     res.status(500).send("Internal server error.");
   }
-  
 });
 
 export default router;
