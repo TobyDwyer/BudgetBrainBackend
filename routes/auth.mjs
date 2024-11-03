@@ -35,9 +35,7 @@ router.post("/register", async (req, res) => {
   try {
     await user.save();
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
 
     res.status(201).json({
       token: token,
@@ -61,9 +59,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).send("Invalid credentials.");
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
     res.json({ token });
   } catch (err) {
     console.error("Error during login:", err);

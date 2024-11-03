@@ -34,24 +34,39 @@ router.get("/:id", authenticateToken, async (req, res) => {
 
 // Create Budget
 router.post("/", authenticateToken, async (req, res) => {
+  const { _id, ...budgetData } = req.body.budget; // Destructure the request body
+
+  // Validate incoming budget data
+  // const { error } = validateBudget(budgetData); // Assume validateBudget is defined as before
+  // if (error) return res.status(400).send(error.details[0].message);
+
   try {
-    let budget = Budget.findById(req.body._id)
-    
-    if(!budget){
-      budget = new Budget({
-        userId: req.user.id,
-        ...req.body,
-        remainingAmount: 0,
+    let budget = await Budget.findById(_id)
+
+    if (!budget) {
+      budget = await Budget.create({
+        _id : _id,
+        ...budgetData,
+        userId: req.user.id, // Include the userId when creating
+        remainingAmount: budgetData.remainingAmount || 0, // Default remainingAmount to 0
       });
     }else{
-      Object.assign(budget, req.body);
+      Object.assign(budget, budgetData);
+      budget.save()
     }
-
-  
-    await budget.save();
-    res.status(201).json({ budget: budget });
+    // budget = await Budget.findById(budget._id);
+    console.log('budget', {
+      id : budget._id,
+      userId: budget.userId,
+      created : budget.createdAt
+    });
+    
+    res.status(201).json({ budget });
   } catch (err) {
-    res.status(400).send("Error writing budget: " + err.message);
+    if (err.name === 'ValidationError') {
+      return res.status(400).send("Validation Error: " + err.message);
+    }
+    res.status(500).send("Error writing budget: " + err.message);
   }
 });
 
