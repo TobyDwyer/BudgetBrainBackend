@@ -30,11 +30,8 @@ app.use((reg, res, next)=>{
 })
 
 app.use("/api/auth", authRoutes);
-app.route("/api/auth", authRoutes);
 app.use("/api/budgets", budgetRoutes);
-app.route("/api/budgets", budgetRoutes);
 app.use("/api/transactions", transactionRoutes);
-app.route("/api/transactions", transactionRoutes);
 
 let server = http.createServer({}, app)
 console.log("Server listing on: http://localhost:" + PORT);

@@ -34,17 +34,24 @@ router.get("/:id", authenticateToken, async (req, res) => {
 
 // Create Budget
 router.post("/", authenticateToken, async (req, res) => {
-  const budget = new Budget({
-    userId: req.user.id,
-    ...req.body,
-    remainingAmount: 0,
-  });
-
   try {
+    let budget = Budget.findById(req.body._id)
+    
+    if(!budget){
+      budget = new Budget({
+        userId: req.user.id,
+        ...req.body,
+        remainingAmount: 0,
+      });
+    }else{
+      Object.assign(budget, req.body);
+    }
+
+  
     await budget.save();
     res.status(201).json({ budget: budget });
   } catch (err) {
-    res.status(400).send("Error creating budget: " + err.message);
+    res.status(400).send("Error writing budget: " + err.message);
   }
 });
 
