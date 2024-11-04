@@ -84,6 +84,28 @@ router.post("/user", authenticateToken, async (req, res) => {
   }
 });
 
+
+
+router.put("/update", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: req.user.id });
+
+    if (!user) {
+      return res.status(401).send("User not found.");
+    }
+
+    const userData = req.body
+    
+    Object.assign(user, userData)
+    user.save()
+
+    res.json(user);
+  } catch (err) {
+    console.error("Error during login:", err);
+    res.status(500).send("Internal server error.");
+  }
+});
+
 router.post("/dashboard", authenticateToken, async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.user.id });
