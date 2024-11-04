@@ -6,13 +6,35 @@ const router = express.Router();
 
 // Create Transaction
 router.post("/", authenticateToken, async (req, res) => {
-  const transaction = new Transaction({ userId: req.user.id, ...req.body });
+  const { _id, ...transactionData } = req.body.transaction;
 
   try {
-    await transaction.save();
-    res.status(201).json(transaction);
+    let transaction = await Transaction.findById(_id)
+
+    if (!transaction) {
+      transaction = await Transaction.create({
+        _id : _id,
+        ...transactionData,
+        userId: req.user.id, 
+        remainingAmount: transactionData.remainingAmount || 0, 
+      });
+    }else{
+      Object.assign(transaction, transactionData);
+      transaction.save()
+    }
+    // budget = await Budget.findById(budget._id);
+    console.log('transaction', {
+      id : transaction._id,
+      userId: transaction.userId,
+      created : transaction.createdAt
+    });
+    
+    res.status(201).json({ transaction: transaction });
   } catch (err) {
-    res.status(400).send("Error creating transaction: " + err.message);
+    if (err.name === 'ValidationError') {
+      return res.status(400).send("Validation Error: " + err.message);
+    }
+    res.status(500).send("Error writing budget: " + err.message);
   }
 });
 
