@@ -6,11 +6,16 @@ import http from "http"
 import budgetRoutes from "./routes/budgets.mjs"
 import transactionRoutes from "./routes/transactions.mjs"
 import authRoutes from "./routes/auth.mjs";
+import homeRoutes from "./routes/home.mjs";
+import path, { dirname } from "path"
+import { fileURLToPath } from "url"
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 2323;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Connect to MongoDB
 mongoose
@@ -32,6 +37,11 @@ app.use((reg, res, next)=>{
 app.use("/api/auth", authRoutes);
 app.use("/api/budgets", budgetRoutes);
 app.use("/api/transactions", transactionRoutes);
+app.use("/", homeRoutes);
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+
 
 let server = http.createServer({}, app)
 console.log("Server listing on: http://localhost:" + PORT);

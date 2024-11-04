@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Account</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            margin: 1rem;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            font-size: 1.875rem;
+        }
+
+        p {
+            color: #4a5568;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .checkbox-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            color: #4a5568;
+            cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 0.75rem;
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        button {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .delete-btn {
+            background-color: #e53e3e;
+            color: white;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .delete-btn.enabled {
+            opacity: 1;
+            cursor: pointer;
+        }
+
+        .delete-btn.enabled:hover {
+            background-color: #c53030;
+        }
+
+        .cancel-btn {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .cancel-btn:hover {
+            background-color: #cbd5e0;
+        }
+
+        #errorMessage {
+            color: #e53e3e;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .loading::after {
+            content: "";
+            position: absolute;
+            width: 1rem;
+            height: 1rem;
+            top: 50%;
+            left: 50%;
+            margin: -0.5rem 0 0 -0.5rem;
+            border: 2px solid #fff;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Delete Account</h1>
+        <p>This action cannot be undone. Please confirm that you understand the consequences of deleting your account.
+        </p>
+
+        <form id="deleteAccountForm">
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="confirmDelete">
+                    I understand that this action is permanent and cannot be reversed
+                </label>
+            </div>
+
+            <div id="errorMessage"></div>
+
+            <div class="button-group">
+                <button type="button" class="cancel-btn" onclick="window.location.href='/'">Cancel</button>
+                <button type="submit" class="delete-btn" id="deleteButton" disabled>Delete Account</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('deleteAccountForm');
+        const confirmDelete = document.getElementById('confirmDelete');
+        const deleteButton = document.getElementById('deleteButton');
+        const errorMessage = document.getElementById('errorMessage');
+
+        function updateDeleteButton() {
+            if (confirmDelete.checked) {
+                deleteButton.classList.add('enabled');
+                deleteButton.disabled = false;
+            } else {
+                deleteButton.classList.remove('enabled');
+                deleteButton.disabled = true;
+            }
+        }
+
+        confirmDelete.addEventListener('change', updateDeleteButton);
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            // Double confirm with a dialog
+            if (!confirm('Are you absolutely sure you want to delete your account? This cannot be undone.')) {
+                return;
+            }
+
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'Authentication required. Please log in again.';
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 2000);
+                return;
+            }
+
+            deleteButton.classList.add('loading');
+            errorMessage.style.display = 'none';
+
+            try {
+                const response = await fetch('/delete-account', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`, // Changed to Authorization header
+                    },
+                });
+
+                if (response.ok) {
+                    localStorage.removeItem('authToken');
+                    window.location.href = '/login.html?deleted=true';
+                } else {
+                    const errorText = await response.text();
+                    errorMessage.style.display = 'block';
+                    errorMessage.textContent = `Account deletion failed: ${errorText}`;
+                }
+            } catch (error) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'An error occurred. Please try again later.';
+            } finally {
+                deleteButton.classList.remove('loading');
+            }
+        });
+    </script>
+</body>
+
+</html>
